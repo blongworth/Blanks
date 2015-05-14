@@ -1,0 +1,74 @@
+---
+title: "AMS Blanks"
+author: "Brett Longworth"
+date: "May 14, 2015"
+output: html_document
+---
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(RODBC)
+library(dplyr)
+library(ggplot2)
+
+source("~/R/dbconfig.R") #DB connection info
+#Open DB connection
+db <- odbcConnect(database, uid = uid, pwd = pwd)
+
+#Get raw blank data
+c1 =  sqlQuery(db, paste("
+      SELECT runtime, sample_name, target.tp_num, 
+          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+        FROM snics_raw, target
+      	WHERE target.tp_num = snics_raw.tp_num
+        AND target.rec_num = 83028
+        "))
+
+jme =  sqlQuery(db, paste("
+      SELECT runtime, sample_name, tp_num, 
+          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+        FROM snics_raw
+        WHERE sample_name LIKE 'Alfa%'"))
+
+c1$type <- "C1"
+jme$type <- "JME"
+
+#add type columns, combine data frames
+
+blanks.r <- rbind(c1, jme)
+blanks.r$type <- ordered(blanks.r$type, levels = c("C1", "JME"))
+
+blanks <- blanks.r %>%
+  mutate(system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS")) %>%
+  filter(ok_calc == 1) %>%
+  group_by(tp_num, system, type) %>%
+  summarize(
+    he12c = mean(he12c),
+    he1412 = mean(he14_12)
+  ) %>%
+  filter(he1412 < 1e-14) %>%
+mutate(c1412x = he1412 * 1e16)
+
+#Close DB
+odbcClose(db)
+
+```
+
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+qplot(system, he1412, geom = "boxplot", data = blanks)
+
+ggplot(blanks, aes(x = system, y = c1412x)) + 
+  geom_boxplot() + facet_grid(. ~ type) + 
+  xlab("System") + ylab("Average 14/12 ratio") +
+  #scale_x_discrete(limits=c("rec","bouncer","snics")) + 
+  ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
+  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
