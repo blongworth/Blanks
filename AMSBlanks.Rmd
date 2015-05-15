@@ -105,3 +105,26 @@ qplot(tp_date_pressed, c1412x, color = system, data = blanks) +
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
 
+### CFAMS Stripper
+
+Summary of CFAMS data before and after the new stripper canal was installed.
+
+```{r, message=FALSE}
+blanks.s <- blanks %>%
+  filter(system == "CFAMS") %>%
+  mutate(stripper = as.Date(tp_date_pressed) > "2015-01-15")
+  
+blanks.s %>% group_by(stripper, type) %>%
+  summarize(he1412 = mean(c1412x),
+            he1412.sd = sd(c1412x),
+            N = n())
+
+ggplot(blanks.s, aes(x = stripper, y = c1412x)) + 
+  geom_boxplot() + facet_grid(. ~ type) + 
+  xlab("New Stripper") + ylab("Average 14/12 ratio") +
+  ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
+  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+
+
+```
+
