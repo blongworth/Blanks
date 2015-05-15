@@ -7,6 +7,8 @@ output: html_document
 
 Summary of AMS blanks (JME and C1) for both machines from Sep 2014 to present. 
 
+Only targets larger than 40 umol and from the SPL used (disregarding JME).
+
 ## Data getting and munging
 
 ```{r warning=FALSE, message=FALSE}
@@ -21,21 +23,28 @@ db <- odbcConnect(database, uid = uid, pwd = pwd)
 
 #Get raw blank data
 c1 =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-        FROM snics_raw, target
+        FROM snics_raw, target, graphite
       	WHERE target.tp_num = snics_raw.tp_num
+        AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '2014-09-01'
         AND target.rec_num = 83028
+        AND graphite.gf_co2_qty > 40
+        AND graphite_lab = 1
         "))
 
 acet =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-        FROM snics_raw, target
+        FROM snics_raw, target, graphite
       	WHERE target.tp_num = snics_raw.tp_num
+        AND target.osg_num = graphite.osg_num
         AND sample_name LIKE 'Acet%'
-        AND tp_date_pressed > '2014-09-01'"))
+        AND tp_date_pressed > '2014-09-01'
+        AND graphite.gf_co2_qty > 40
+        AND graphite_lab = 1
+      "))
 
 jme =  sqlQuery(db, paste("
       SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
@@ -52,6 +61,7 @@ odbcClose(db)
 c1$type <- "C1"
 acet$type <- "Acet"
 jme$type <- "JME"
+jme$gf_co2_qty <- NA
 blanks.r <- rbind(c1, acet, jme)
 blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "JME"))
 
