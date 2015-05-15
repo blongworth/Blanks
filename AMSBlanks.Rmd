@@ -5,14 +5,15 @@ date: "May 14, 2015"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Summary of AMS blanks (JME and C1) for both machines from Sep 2014 to present. 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Data getting and munging
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 library(RODBC)
 library(dplyr)
 library(ggplot2)
+library(knitr)
 
 source("~/R/dbconfig.R") #DB connection info
 #Open DB connection
@@ -20,31 +21,45 @@ db <- odbcConnect(database, uid = uid, pwd = pwd)
 
 #Get raw blank data
 c1 =  sqlQuery(db, paste("
-      SELECT runtime, sample_name, target.tp_num, 
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
+        AND tp_date_pressed > '2014-09-01'
         AND target.rec_num = 83028
         "))
 
-jme =  sqlQuery(db, paste("
-      SELECT runtime, sample_name, tp_num, 
+acet =  sqlQuery(db, paste("
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-        FROM snics_raw
-        WHERE sample_name LIKE 'Alfa%'"))
+        FROM snics_raw, target
+      	WHERE target.tp_num = snics_raw.tp_num
+        AND sample_name LIKE 'Acet%'
+        AND tp_date_pressed > '2014-09-01'"))
 
-c1$type <- "C1"
-jme$type <- "JME"
+jme =  sqlQuery(db, paste("
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
+          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+        FROM snics_raw, target
+      	WHERE target.tp_num = snics_raw.tp_num
+        AND sample_name LIKE 'Alfa%'
+        AND tp_date_pressed > '2014-09-01'"))
+
+#Close DB
+odbcClose(db)
 
 #add type columns, combine data frames
+c1$type <- "C1"
+acet$type <- "Acet"
+jme$type <- "JME"
+blanks.r <- rbind(c1, acet, jme)
+blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "JME"))
 
-blanks.r <- rbind(c1, jme)
-blanks.r$type <- ordered(blanks.r$type, levels = c("C1", "JME"))
-
+#average by target and filter
 blanks <- blanks.r %>%
   mutate(system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS")) %>%
   filter(ok_calc == 1) %>%
-  group_by(tp_num, system, type) %>%
+  group_by(tp_num, tp_date_pressed, system, type) %>%
   summarize(
     he12c = mean(he12c),
     he1412 = mean(he14_12)
@@ -52,23 +67,41 @@ blanks <- blanks.r %>%
   filter(he1412 < 1e-14) %>%
 mutate(c1412x = he1412 * 1e16)
 
-#Close DB
-odbcClose(db)
-
+#Export data as CSV
+write.csv(blanks, "blanks.csv")
 ```
 
 
-You can also embed plots, for example:
+## Summary
 
-```{r, echo=FALSE}
-qplot(system, he1412, geom = "boxplot", data = blanks)
+Data are means by target of accepted (unflagged) points. Points above 1e-14 removed.
 
+### Summary table
+
+```{r}
+
+blanks %>%
+  group_by(system, type) %>%
+  summarize(he1412 = mean(c1412x),
+            he1412.sd = sd(c1412x),
+            N = n())
+```
+
+### Boxplots by system and sample type for all data.
+
+```{r}
 ggplot(blanks, aes(x = system, y = c1412x)) + 
   geom_boxplot() + facet_grid(. ~ type) + 
   xlab("System") + ylab("Average 14/12 ratio") +
-  #scale_x_discrete(limits=c("rec","bouncer","snics")) + 
   ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
   theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Variability of blanks over time.
+
+```{r, message=FALSE}
+qplot(tp_date_pressed, c1412x, color = system, data = blanks) +
+  geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+  theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+```
+
