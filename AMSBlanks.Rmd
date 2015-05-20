@@ -68,11 +68,12 @@ blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "JME"))
 #average by target and filter
 blanks <- blanks.r %>%
   mutate(system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS")) %>%
-  filter(ok_calc == 1) %>%
+  #filter(ok_calc == 1) %>%
   group_by(tp_num, tp_date_pressed, system, type) %>%
   summarize(
-    he12c = mean(he12c),
-    he1412 = mean(he14_12)
+    he12c = mean(ifelse(ok_calc == 1, he12c, NA), na.rm = TRUE),
+    he1412 = mean(ifelse(ok_calc == 1, he14_12, NA), na.rm = TRUE),
+    flagged = ( (n() - sum(ok_calc == 1)) / n()) # fraction of runs flagged
   ) %>%
   filter(he1412 < 1e-14) %>%
 mutate(c1412x = he1412 * 1e16)
@@ -111,6 +112,24 @@ ggplot(blanks, aes(x = system, y = c1412x)) +
 
 ```{r, message=FALSE}
 qplot(tp_date_pressed, c1412x, color = system, data = blanks) +
+  geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+  theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+```
+
+### Flagging
+
+#### By system
+```{r}
+ggplot(blanks, aes(x = system, y = flagged)) + 
+  geom_violin() + facet_grid(. ~ type) + 
+  xlab("System") + ylab("Fraction of runs flagged") +
+  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+```
+
+#### Over time
+
+```{r, message=FALSE}
+qplot(tp_date_pressed, flagged, color = system, data = blanks) +
   geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
