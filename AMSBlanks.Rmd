@@ -16,6 +16,9 @@ library(RODBC)
 library(dplyr)
 library(ggplot2)
 library(knitr)
+library(ggthemr)
+
+ggthemr("fresh")
 
 source("~/R/dbconfig.R") #DB connection info
 #Open DB connection
