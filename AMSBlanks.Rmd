@@ -181,6 +181,12 @@ ggplot(blanks, aes(x = system, y = fm_corr)) +
   xlab("System") + ylab("Average blank corrected norm Fm") +
   #ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
   theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+
+ggplot(blanks, aes(x = system, y = fm_corr)) + 
+  geom_boxplot() + facet_grid(. ~ type) + ylim(c(-0.002,0.002))
+  xlab("System") + ylab("Average blank corrected norm Fm") +
+  #ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
+  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
 
 ### Variability of blanks over time.
