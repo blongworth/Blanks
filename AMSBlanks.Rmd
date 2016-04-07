@@ -73,8 +73,8 @@ blanks.a <- blanks.r %>%
     he1412 = mean(ifelse(ok_calc == 1, he14_12, NA), na.rm = TRUE),
     flagged = ( (n() - sum(ok_calc == 1)) / n()) # fraction of runs flagged
   ) %>%
-  filter(he1412 < 1e-13) %>%
-  mutate(c1412x = he1412 * 1e16)
+  mutate(c1412x = he1412 * 1e16) %>%
+  filter(c1412x < 250) 
 
 ###
 #Get normalized blank data
@@ -132,7 +132,7 @@ blanks.as <- select(as.data.frame(blanks.a), -tp_date_pressed, -system, -type)
 blanks <- left_join(blanks.n, blanks.as, by="tp_num")
 
 blanks <- blanks %>% 
-  filter(norm_ratio < .05, fm_corr <.05) %>% 
+  filter(norm_ratio < .05, norm_ratio > -99, fm_corr <.05) %>% 
   mutate(merr = pmax(int_err, ext_err))
 #Export data as CSV
 write.csv(blanks, "blanks.csv")
@@ -164,7 +164,7 @@ kable(blanksum, digits = c(0,0,2,3,4,5,5,6,0))
 ### Boxplots by system and sample type for all data.
 
 ```{r echo=FALSE, warning=FALSE}
-ggplot(blanks, aes(x = system, y = c1412x)) + 
+ggplot(blanks.a, aes(x = system, y = c1412x)) + 
   geom_boxplot() + facet_grid(. ~ type) + 
   xlab("System") + ylab("Average Raw 14/12 ratio") +
   ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
@@ -192,8 +192,8 @@ ggplot(blanks, aes(x = system, y = fm_corr)) +
 ### Variability of blanks over time.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-qplot(tp_date_pressed, c1412x, color = system, data = blanks) +
-  geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+qplot(tp_date_pressed, c1412x, color = system, data = blanks.a) +
+  scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 
 qplot(tp_date_pressed, norm_ratio, color = system, data = blanks) +
