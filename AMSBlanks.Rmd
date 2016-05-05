@@ -128,8 +128,9 @@ blanks.n <- mutate(blanks.n, system = ifelse(grepl("CFAMS", wheel), "CFAMS", "US
 
 #combine data
 
-blanks.as <- select(as.data.frame(blanks.a), -tp_date_pressed, -system, -type)
-blanks <- left_join(blanks.n, blanks.as, by="tp_num")
+blanks.n <- select(as.data.frame(blanks.n), -tp_date_pressed, -type)
+blanks.as <- as.data.frame(blanks.a)
+blanks <- full_join(blanks.n, blanks.as, by="tp_num")
 
 blanks <- blanks %>% 
   filter(norm_ratio < .05, norm_ratio > -99, fm_corr <.05) %>% 
