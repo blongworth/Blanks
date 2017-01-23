@@ -1,7 +1,7 @@
 ---
 title: "AMS Blanks"
 author: "Brett Longworth"
-date: "May 14, 2015"
+date: "Jan 23, 2017"
 output: html_document
 ---
 
@@ -18,6 +18,8 @@ library(knitr)
 
 #ggthemr("fresh")
 
+from <- '2016-01-01'
+
 source("~/R/dbconfig.R") #DB connection info
 #Open DB connection
 db <- odbcConnect(database, uid = uid, pwd = pwd)
@@ -29,12 +31,23 @@ c1r =  sqlQuery(db, paste("
         FROM snics_raw, target, graphite
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.osg_num = graphite.osg_num
-        AND tp_date_pressed > '2014-09-01'
+        AND tp_date_pressed > '", from, "'
         AND target.rec_num = 83028
         AND graphite.gf_co2_qty > 40
         AND graphite_lab = 1
         "))
 
+tfr =  sqlQuery(db, paste("
+      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
+          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+        FROM snics_raw, target, graphite
+      	WHERE target.tp_num = snics_raw.tp_num
+        AND target.osg_num = graphite.osg_num
+        AND tp_date_pressed > '", from, "'
+        AND target.rec_num = 2138
+        AND graphite.gf_co2_qty > 40
+        AND graphite_lab = 1
+        "))
 acetr =  sqlQuery(db, paste("
       SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
@@ -42,7 +55,7 @@ acetr =  sqlQuery(db, paste("
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.osg_num = graphite.osg_num
         AND sample_name LIKE 'Acet%'
-        AND tp_date_pressed > '2014-09-01'
+        AND tp_date_pressed > '", from, "'
         AND graphite.gf_co2_qty > 40
         AND graphite_lab = 1
       "))
@@ -53,15 +66,16 @@ jmer =  sqlQuery(db, paste("
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.rec_num = 32491
-        AND tp_date_pressed > '2014-09-01'"))
+        AND tp_date_pressed > '", from, "'"))
 
 #add type columns, combine data frames
 c1r$type <- "C1"
+tfr$type <- "Tiri F"
 acetr$type <- "Acet"
 jmer$type <- "JME"
 jmer$gf_co2_qty <- NA
-blanks.r <- rbind(c1r, acetr, jmer)
-blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "JME"))
+blanks.r <- rbind(c1r, tfr, acetr, jmer)
+blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "Tiri F", "JME"))
 
 #average by target and filter
 blanks.a <- blanks.r %>%
@@ -86,8 +100,20 @@ c1 =  sqlQuery(db, paste("
         FROM snics_results, target, graphite
         WHERE target.tp_num = snics_results.tp_num
         AND target.osg_num = graphite.osg_num
-        AND tp_date_pressed > '2014-09-01'
+        AND tp_date_pressed > '", from, "'
         AND target.rec_num = 83028
+        AND graphite.gf_co2_qty > 40
+        AND graphite_lab = 1
+        "))
+
+tf =  sqlQuery(db, paste("
+      SELECT runtime, wheel, target.tp_date_pressed, sample_name, target.rec_num, target.tp_num, gf_co2_qty, 
+          norm_ratio, int_err, ext_err, blk_corr_method, fm_corr, sig_fm_corr, ss
+        FROM snics_results, target, graphite
+        WHERE target.tp_num = snics_results.tp_num
+        AND target.osg_num = graphite.osg_num
+        AND tp_date_pressed > '", from, "'
+        AND target.rec_num = 2138
         AND graphite.gf_co2_qty > 40
         AND graphite_lab = 1
         "))
@@ -99,7 +125,7 @@ acet =  sqlQuery(db, paste("
         WHERE target.tp_num = snics_results.tp_num
         AND target.osg_num = graphite.osg_num
         AND sample_name LIKE 'Acet%'
-        AND tp_date_pressed > '2014-09-01'
+        AND tp_date_pressed > '", from, "'
         AND graphite.gf_co2_qty > 40
         AND graphite_lab = 1
       "))
@@ -118,11 +144,12 @@ acet =  sqlQuery(db, paste("
 odbcClose(db)
 
 c1$type <- "C1"
+tf$type <- "Tiri F"
 acet$type <- "Acet"
 #jme$type <- "JME"
 #jme$gf_co2_qty <- NA
-blanks.n <- rbind(c1, acet)
-blanks.n$type <- ordered(blanks.n$type, levels = c("Acet", "C1"))
+blanks.n <- rbind(c1, tf, acet)
+blanks.n$type <- ordered(blanks.n$type, levels = c("Acet", "C1", "Tiri F"))
 blanks.n <- mutate(blanks.n, system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS"))
 
 
