@@ -5,11 +5,12 @@ date: "Jan 23, 2017"
 output: html_document
 ---
 
-Summary of AMS blanks (JME and C1) for both machines from Sep 2014 to present. Raw ratio data are from snics_raw, normalized and blank corrected values are from snics_results. I'm still working on pulling out acetanalides that were used as test samples, so for now I'm rejecting data Fm > 0.02. Only targets larger than 40 umol and from the SPL used (disregarding JME).
+Summary of AMS blanks (JME and C1) for both machines from Sep 2014 to present. Raw ratio data are from snics_raw, normalized and blank corrected values are from snics_results. I'm still working on pulling out acetanalides that were used as test samples, so for now I'm rejecting data Fm > 0.05. 
 
 ## Data getting and munging
 
 ```{r warning=FALSE, message=FALSE}
+library(amstools)
 library(RODBC)
 library(dplyr)
 library(ggplot2)
@@ -18,70 +19,42 @@ library(knitr)
 
 #ggthemr("fresh")
 
-from <- '2016-01-01'
+from <- '2014-09-01'
 
-source("~/R/dbconfig.R") #DB connection info
 #Open DB connection
-db <- odbcConnect(database, uid = uid, pwd = pwd)
+db <- conNOSAMS()
 
 #Get raw blank data
-c1r =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
+raw =  sqlQuery(db, paste("
+      SELECT runtime, target.tp_date_pressed, target.rec_num, 
+          sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
         FROM snics_raw, target, graphite
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num = 83028
-        AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
+        AND target.rec_num IN (83028, 2138, 140548, 36168)
         "))
-
-tfr =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
-          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-        FROM snics_raw, target, graphite
-      	WHERE target.tp_num = snics_raw.tp_num
-        AND target.osg_num = graphite.osg_num
-        AND tp_date_pressed > '", from, "'
-        AND target.rec_num = 2138
-        AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
-        "))
-acetr =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, gf_co2_qty, 
-          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-        FROM snics_raw, target, graphite
-      	WHERE target.tp_num = snics_raw.tp_num
-        AND target.osg_num = graphite.osg_num
-        AND sample_name LIKE 'Acet%'
-        AND tp_date_pressed > '", from, "'
-        AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
-      "))
 
 jmer =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, sample_name, target.tp_num, 
-          he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+      SELECT runtime, target.tp_date_pressed, target.rec_num, 
+          sample_name, target.tp_num, he12c, he13c, d13c, he14_12, 
+          he13_12, wheel, ok_calc
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
+        AND tp_date_pressed > '", from, "'
         AND target.rec_num = 32491
-        AND tp_date_pressed > '", from, "'"))
+        "))
 
 #add type columns, combine data frames
-c1r$type <- "C1"
-tfr$type <- "Tiri F"
-acetr$type <- "Acet"
-jmer$type <- "JME"
 jmer$gf_co2_qty <- NA
-blanks.r <- rbind(c1r, tfr, acetr, jmer)
-blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "Tiri F", "JME"))
+blanks.r <- rbind(raw, jmer)
+#blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "TIRI-F", "JME"))
 
 #average by target and filter
 blanks.a <- blanks.r %>%
-  mutate(system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS")) %>%
   #filter(ok_calc == 1) %>%
-  group_by(tp_num, tp_date_pressed, system, type) %>%
+  group_by(tp_num) %>%
   summarize(
     he12c = mean(ifelse(ok_calc == 1, he12c, NA), na.rm = TRUE),
     he1412 = mean(ifelse(ok_calc == 1, he14_12, NA), na.rm = TRUE),
@@ -94,73 +67,54 @@ blanks.a <- blanks.r %>%
 #Get normalized blank data
 ###
 
-c1 =  sqlQuery(db, paste("
-      SELECT runtime, wheel, target.tp_date_pressed, sample_name, target.rec_num, target.tp_num, gf_co2_qty, 
-          norm_ratio, int_err, ext_err, blk_corr_method, fm_corr, sig_fm_corr, ss
+blanks.n =  sqlQuery(db, paste("
+      SELECT runtime, wheel, target.tp_date_pressed, sample_name,
+          target.rec_num, target.tp_num, gf_co2_qty, 
+          norm_ratio, int_err, ext_err, 
+          blk_corr_method, fm_corr, sig_fm_corr, ss
         FROM snics_results, target, graphite
         WHERE target.tp_num = snics_results.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num = 83028
+        AND target.rec_num IN (83028, 2138, 140548, 36168)
         AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
         "))
 
-tf =  sqlQuery(db, paste("
-      SELECT runtime, wheel, target.tp_date_pressed, sample_name, target.rec_num, target.tp_num, gf_co2_qty, 
-          norm_ratio, int_err, ext_err, blk_corr_method, fm_corr, sig_fm_corr, ss
-        FROM snics_results, target, graphite
-        WHERE target.tp_num = snics_results.tp_num
-        AND target.osg_num = graphite.osg_num
-        AND tp_date_pressed > '", from, "'
-        AND target.rec_num = 2138
-        AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
-        "))
 
-acet =  sqlQuery(db, paste("
-      SELECT runtime, wheel, target.tp_date_pressed, sample_name, target.rec_num, target.tp_num, gf_co2_qty, 
-          norm_ratio, int_err, ext_err, blk_corr_method, fm_corr, sig_fm_corr, ss
-        FROM snics_results, target, graphite
-        WHERE target.tp_num = snics_results.tp_num
-        AND target.osg_num = graphite.osg_num
-        AND sample_name LIKE 'Acet%'
+jme =  sqlQuery(db, paste("
+       SELECT runtime, wheel, target.tp_date_pressed, sample_name, 
+           target.rec_num, target.tp_num,
+           norm_ratio, int_err, ext_err,
+           blk_corr_method, fm_corr, sig_fm_corr, ss
+         FROM snics_results, target
+         WHERE target.tp_num = snics_results.tp_num
+         AND target.rec_num = 32491
         AND tp_date_pressed > '", from, "'
-        AND graphite.gf_co2_qty > 40
-        AND graphite_lab = 1
-      "))
-
-#Commented out because no JME data in snics_results?
-# jme =  sqlQuery(db, paste("
-#       SELECT runtime, wheel, target.tp_date_pressed, sample_name, target.rec_num, target.tp_num, gf_co2_qty, 
-#           norm_ratio, int_err, ext_err, blk_corr_method, fm_corr, sig_fm_corr, ss
-#         FROM snics_results, target, graphite
-#         WHERE target.tp_num = snics_results.tp_num
-#         AND target.osg_num = graphite.osg_num
-#         AND target.rec_num = 32491
-#         AND tp_date_pressed > '2014-09-01'"))
+         "))
 
 #Close DB
 odbcClose(db)
 
-c1$type <- "C1"
-tf$type <- "Tiri F"
-acet$type <- "Acet"
-#jme$type <- "JME"
-#jme$gf_co2_qty <- NA
-blanks.n <- rbind(c1, tf, acet)
-blanks.n$type <- ordered(blanks.n$type, levels = c("Acet", "C1", "Tiri F"))
-blanks.n <- mutate(blanks.n, system = ifelse(grepl("CFAMS", wheel), "CFAMS", "USAMS"))
+jme$gf_co2_qty <- NA
+blanks.n <- rbind(blanks.n, jme)
 
 
 #combine data
 
-blanks.n <- select(blanks.n, -tp_date_pressed, -type, -system)
-blanks <- left_join(blanks.a, blanks.n, by="tp_num")
 
-blanks <- blanks %>% 
-  filter(norm_ratio < .05, norm_ratio > -99, fm_corr <.05) %>% 
-  mutate(merr = pmax(int_err, ext_err))
+blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
+  mutate(tp_date_pressed = as.Date(tp_date_pressed),
+         type = recode(as.character(rec_num), 
+                               "83028" = "C1", 
+                               "2138" = "TIRI-F", 
+                               "36168" = "Acet", 
+                               "140548" = "Acet",
+                               "32491" = "JME"),
+         merr = pmax(int_err, ext_err),
+         system = substring(wheel, 1, 5)) %>%
+ filter(norm_ratio < .05, 
+        norm_ratio > -99, 
+        fm_corr <.05) 
 #Export data as CSV
 write.csv(blanks, "blanks.csv")
 ```
@@ -182,8 +136,6 @@ blanksum <- blanks %>%
     normFm = mean(norm_ratio),
     normFm.sd = sd(norm_ratio),
     normFm.err = mean(merr),
-    BlkCorrFm = mean(fm_corr),
-    #fm_corr.sd = sd(fm_corr, na.rm = TRUE),
     N = n())
 kable(blanksum, digits = c(0,0,2,3,4,5,5,6,0))
 ```
@@ -191,7 +143,7 @@ kable(blanksum, digits = c(0,0,2,3,4,5,5,6,0))
 ### Boxplots by system and sample type for all data.
 
 ```{r echo=FALSE, warning=FALSE}
-ggplot(blanks.a, aes(x = system, y = c1412x)) + 
+ggplot(blanks, aes(x = system, y = c1412x)) + 
   geom_boxplot() + facet_grid(. ~ type) + 
   xlab("System") + ylab("Average Raw 14/12 ratio") +
   ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
@@ -202,33 +154,19 @@ ggplot(blanks, aes(x = system, y = norm_ratio)) +
   xlab("System") + ylab("Average Normalized Fm") +
   #ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
   theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
-
-ggplot(blanks, aes(x = system, y = fm_corr)) + 
-  geom_boxplot() + facet_grid(. ~ type) + 
-  xlab("System") + ylab("Average blank corrected norm Fm") +
-  #ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
-  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
-
-ggplot(blanks, aes(x = system, y = fm_corr)) + 
-  geom_boxplot() + facet_grid(. ~ type) + ylim(c(-0.002,0.002)) +
-  xlab("System") + ylab("Average blank corrected norm Fm") +
-  #ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
-  theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
 
 ### Variability of blanks over time.
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-qplot(tp_date_pressed, c1412x, color = system, data = blanks.a) +
-  scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+ggplot(blanks, aes(tp_date_pressed, c1412x, color = system)) +
+  scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") + 
+  geom_point() + theme_bw() + 
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 
-qplot(tp_date_pressed, norm_ratio, color = system, data = blanks) +
+ggplot(blanks, aes(tp_date_pressed, norm_ratio, color = system)) +
   geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
-  theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
-
-qplot(tp_date_pressed, fm_corr, color = system, data = blanks) +
-  geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+  geom_point() + 
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 ```
 
