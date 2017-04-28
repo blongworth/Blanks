@@ -121,6 +121,7 @@ ui <- fluidPage(
       sliderInput("size", "Graphite Size (umol)",
                   1, 500, value = c(40,300)),
       checkboxInput("filtqc", "Filter by Fm?"),
+      checkboxInput("raw", "Plot raw 14/12"),
       sliderInput("nfm", "Max Fm",
                   0, 0.1, value = 0.02)
     ),
@@ -166,17 +167,32 @@ server <- function(input, output) {
   })
   
   output$blankPlot <- renderPlot({
+    if (input$raw == TRUE) {
     ggplot(blankdata(), aes(x = system, y = c1412x)) + 
       geom_boxplot() + facet_grid(. ~ type) + 
       xlab("System") + ylab("Average Raw 14/12 ratio") +
       ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+    } else {
+    ggplot(blankdata(), aes(x = system, y = norm_ratio)) + 
+      geom_boxplot() + facet_grid(. ~ type) + 
+      xlab("System") + ylab("Average normalized ratio") +
+      ylab(expression(paste("Normalized Fm"))) +
+      theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+  }
   })
   
   output$blanktimePlot <- renderPlot({
+    if (input$raw == TRUE) {
     qplot(tp_date_pressed, c1412x, color = system, data = blankdata()) +
-      scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+      facet_grid(type ~ ., scale = "free") +  theme_bw() + 
       theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+    } else {
+    qplot(tp_date_pressed, norm_ratio, color = system, data = blankdata()) +
+      facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+      
+    }
   })
   
 }
