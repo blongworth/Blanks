@@ -1,12 +1,9 @@
 ### shiny app to get blanks from db, summarize and plot
 
-
 ### load libraries
 library(amstools)
-library(RODBC)
 library(dplyr)
 library(ggplot2)
-library(knitr)
 library(shiny)
 
 
@@ -101,7 +98,8 @@ blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
                                "140548" = "Acet",
                                "32491" = "JME"),
          merr = pmax(int_err, ext_err),
-         system = substring(wheel, 1, 5)) %>%
+         system = substring(wheel, 1, 5),
+         age = rcage(norm_ratio)) %>%
  filter(norm_ratio < .05, 
         norm_ratio > -99, 
         fm_corr <.05) 
@@ -160,11 +158,10 @@ server <- function(input, output) {
       summarize(
         Raw1412 = mean(c1412x, na.rm = TRUE),
         Raw1412.sd = sd(c1412x, na.rm = TRUE),
-        normFm = mean(norm_ratio),
-        normFm.sd = sd(norm_ratio),
-        normFm.err = mean(merr),
+        RCAge  = mean(age),
+        RCAge.sd = sd(age),
         N = n())
-  })
+  }, digits = 0)
   
   output$blankPlot <- renderPlot({
     if (input$raw == TRUE) {
@@ -174,10 +171,10 @@ server <- function(input, output) {
       ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
-    ggplot(blankdata(), aes(x = system, y = norm_ratio)) + 
+    ggplot(blankdata(), aes(x = system, y = age)) + 
       geom_boxplot() + facet_grid(. ~ type) + 
       xlab("System") + ylab("Average normalized ratio") +
-      ylab(expression(paste("Normalized Fm"))) +
+      ylab(expression(paste("Radiocarbon Age"))) +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
   }
   })
@@ -188,7 +185,7 @@ server <- function(input, output) {
       facet_grid(type ~ ., scale = "free") +  theme_bw() + 
       theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
-    qplot(tp_date_pressed, norm_ratio, color = system, data = blankdata()) +
+    qplot(tp_date_pressed, age, color = system, data = blankdata()) +
       facet_grid(type ~ ., scale = "free") +  theme_bw() + 
       theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
       
