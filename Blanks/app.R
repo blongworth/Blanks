@@ -91,18 +91,16 @@ blanks.n <- rbind(blanks.n, jme)
 #combine data
 blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
   mutate(tp_date_pressed = as.Date(tp_date_pressed),
-         type = recode(as.character(rec_num), 
+         type = ordered(recode(as.character(rec_num), 
                                "83028" = "C1", 
                                "2138" = "TIRI-F", 
                                "36168" = "Acet", 
                                "140548" = "Acet",
                                "32491" = "JME"),
+                        levels = c("Acet", "C1", "TIRI-F", "JME")),
          merr = pmax(int_err, ext_err),
          system = substring(wheel, 1, 5),
-         age = rcage(norm_ratio)) %>%
- filter(norm_ratio < .05, 
-        norm_ratio > -99, 
-        fm_corr <.05) 
+         age = rcage(norm_ratio))
 
 
 ## Define UI for application 
@@ -165,30 +163,31 @@ server <- function(input, output) {
   
   output$blankPlot <- renderPlot({
     if (input$raw == TRUE) {
-    ggplot(blankdata(), aes(x = system, y = c1412x)) + 
-      geom_boxplot() + facet_grid(. ~ type) + 
-      xlab("System") + ylab("Average Raw 14/12 ratio") +
+    ggplot(blankdata(), aes(x = type, y = c1412x)) + 
+      geom_boxplot() + facet_grid(. ~ system) + 
+      xlab("Blank type") + ylab("Average Raw 14/12 ratio") +
       ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
-    ggplot(blankdata(), aes(x = system, y = age)) + 
-      geom_boxplot() + facet_grid(. ~ type) + 
-      xlab("System") + ylab("Average normalized ratio") +
-      ylab(expression(paste("Radiocarbon Age"))) +
+    ggplot(blankdata(), aes(x = type, y = age)) + 
+      geom_boxplot() + facet_grid(. ~ system) + 
+      xlab("Blank type") +
+      ylab("Radiocarbon age") +
       theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
   }
   })
   
   output$blanktimePlot <- renderPlot({
     if (input$raw == TRUE) {
-    qplot(tp_date_pressed, c1412x, color = system, data = blankdata()) +
-      facet_grid(type ~ ., scale = "free") +  theme_bw() + 
-      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+      ggplot(blankdata(), aes(tp_date_pressed, c1412x, color = system)) + 
+        geom_point() +
+        facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) 
     } else {
-    qplot(tp_date_pressed, age, color = system, data = blankdata()) +
-      facet_grid(type ~ ., scale = "free") +  theme_bw() + 
-      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
-      
+      ggplot(blankdata(), aes(tp_date_pressed, age, color = system)) + 
+        geom_point() +
+        facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        ylab("Radiocarbon age") 
     }
   })
   
