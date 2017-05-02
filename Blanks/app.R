@@ -2,6 +2,7 @@
 
 ### load libraries
 library(amstools)
+library(RODBC)
 library(dplyr)
 library(ggplot2)
 library(shiny)
@@ -167,13 +168,15 @@ server <- function(input, output) {
       geom_boxplot() + facet_grid(. ~ system) + 
       xlab("Blank type") + ylab("Average Raw 14/12 ratio") +
       ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
-      theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+      ggtitle("Blanks by system") + theme_bw() + 
+      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
     ggplot(blankdata(), aes(x = type, y = age)) + 
       geom_boxplot() + facet_grid(. ~ system) + 
       xlab("Blank type") +
       ylab("Radiocarbon age") +
-      theme_bw() + theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+      ggtitle("Blanks by system") + theme_bw() + 
+      theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
   }
   })
   
@@ -182,11 +185,13 @@ server <- function(input, output) {
       ggplot(blankdata(), aes(tp_date_pressed, c1412x, color = system)) + 
         geom_point() +
         facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        ggtitle("Blanks over time") +
         ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) 
     } else {
       ggplot(blankdata(), aes(tp_date_pressed, age, color = system)) + 
         geom_point() +
         facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        ggtitle("Blanks over time") +
         ylab("Radiocarbon age") 
     }
   })
