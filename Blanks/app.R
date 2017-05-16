@@ -7,6 +7,7 @@ library(dplyr)
 library(ggplot2)
 library(shiny)
 
+# TODO: sort by size0
 
 ### Get blank data from DB
 from <- '2014-09-01'
@@ -23,7 +24,7 @@ raw =  sqlQuery(db, paste("
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (83028, 2138, 140548, 36168)
+        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168)
         "))
 
 jmer =  sqlQuery(db, paste("
@@ -39,11 +40,9 @@ jmer =  sqlQuery(db, paste("
 #add type columns, combine data frames
 jmer$gf_co2_qty <- NA
 blanks.r <- rbind(raw, jmer)
-#blanks.r$type <- ordered(blanks.r$type, levels = c("Acet", "C1", "TIRI-F", "JME"))
 
 #average by target and filter
 blanks.a <- blanks.r %>%
-  #filter(ok_calc == 1) %>%
   group_by(tp_num) %>%
   summarize(
     he12c = mean(ifelse(ok_calc == 1, he12c, NA), na.rm = TRUE),
@@ -66,8 +65,7 @@ blanks.n =  sqlQuery(db, paste("
         WHERE target.tp_num = snics_results.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (83028, 2138, 140548, 36168)
-        AND graphite.gf_co2_qty > 40
+        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168)
         "))
 
 
@@ -94,6 +92,7 @@ blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
   mutate(tp_date_pressed = as.Date(tp_date_pressed),
          type = ordered(recode(as.character(rec_num), 
                                "83028" = "C1", 
+                               "53804" = "C1", 
                                "2138" = "TIRI-F", 
                                "36168" = "Acet", 
                                "140548" = "Acet",
