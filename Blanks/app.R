@@ -99,7 +99,7 @@ blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
                                "32491" = "JME"),
                         levels = c("Acet", "C1", "TIRI-F", "JME")),
          merr = pmax(int_err, ext_err),
-         system = substring(wheel, 1, 5),
+         system = toupper(substring(wheel, 1, 5)),
          age = rcage(norm_ratio))
 
 
