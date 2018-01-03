@@ -24,7 +24,7 @@ raw =  sqlQuery(db, paste("
       	WHERE target.tp_num = snics_raw.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168)
+        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168, 55101, 1081, 39246)
         "))
 
 jmer =  sqlQuery(db, paste("
@@ -34,7 +34,7 @@ jmer =  sqlQuery(db, paste("
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num = 32491
+        AND target.rec_num IN (32490, 32491, 32492)
         "))
 
 #add type columns, combine data frames
@@ -65,7 +65,7 @@ blanks.n =  sqlQuery(db, paste("
         WHERE target.tp_num = snics_results.tp_num
         AND target.osg_num = graphite.osg_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168)
+        AND target.rec_num IN (83028, 53804, 2138, 140548, 36168, 55101, 1081, 39246)
         "))
 
 
@@ -76,8 +76,8 @@ jme =  sqlQuery(db, paste("
            blk_corr_method, fm_corr, sig_fm_corr, ss
          FROM snics_results, target
          WHERE target.tp_num = snics_results.tp_num
-         AND target.rec_num = 32491
-        AND tp_date_pressed > '", from, "'
+         AND target.rec_num IN (32490, 32491, 32492)
+         AND tp_date_pressed > '", from, "'
          "))
 
 #Close DB
@@ -91,12 +91,17 @@ blanks.n <- rbind(blanks.n, jme)
 blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
   mutate(tp_date_pressed = as.Date(tp_date_pressed),
          type = ordered(recode(as.character(rec_num), 
-                               "83028" = "C1", 
-                               "53804" = "C1", 
+                               "1081" = "C1", 
                                "2138" = "TIRI-F", 
+                               "32490" = "JME",
+                               "32491" = "JME",
+                               "32492" = "JME",
                                "36168" = "Acet", 
-                               "140548" = "Acet",
-                               "32491" = "JME"),
+                               "39246" = "C1", 
+                               "53804" = "C1", 
+                               "55101" = "Acet", 
+                               "83028" = "C1", 
+                               "140548" = "Acet"),
                         levels = c("Acet", "C1", "TIRI-F", "JME")),
          merr = pmax(int_err, ext_err),
          system = toupper(substring(wheel, 1, 5)),
