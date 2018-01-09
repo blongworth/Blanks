@@ -34,7 +34,7 @@ jmer =  sqlQuery(db, paste("
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (32490, 32491, 32492)
+        AND target.rec_num IN (32490, 32491, 32492, 36947, 148820)
         "))
 
 #add type columns, combine data frames
@@ -75,7 +75,7 @@ jme =  sqlQuery(db, paste("
            blk_corr_method, fm_corr, sig_fm_corr, ss
          FROM snics_results, target
          WHERE target.tp_num = snics_results.tp_num
-         AND target.rec_num IN (32490, 32491, 32492)
+         AND target.rec_num IN (32490, 32491, 32492, 36947, 148820)
          AND tp_date_pressed > '", from, "'
          "))
 
@@ -100,8 +100,10 @@ blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
                                "53804" = "C1", 
                                "55101" = "Acet", 
                                "83028" = "C1", 
-                               "140548" = "Acet"),
-                        levels = c("Acet", "C1", "TIRI-F", "JME")),
+                               "140548" = "Acet",
+                               "36947" = "Old Ceylon",
+                               "148820" = "Ceylon"),
+                        levels = c("Acet", "C1", "TIRI-F", "JME", "Old Ceylon", "Ceylon")),
          merr = pmax(int_err, ext_err),
          system = toupper(substring(wheel, 1, 5)),
          age = rcage(norm_ratio))
