@@ -160,8 +160,8 @@ server <- function(input, output) {
     blankdata() %>%
       group_by(system, type) %>%
       summarize(
-        Raw1412 = as.integer(mean(c1412x, na.rm = TRUE)),
-        Raw1412.sd = as.integer(sd(c1412x, na.rm = TRUE)),
+        #Raw1412 = as.integer(mean(c1412x, na.rm = TRUE)),
+        #Raw1412.sd = as.integer(sd(c1412x, na.rm = TRUE)),
         Norm1412 = mean(norm_ratio, na.rm = TRUE),
         Norm1412.sd = sd(norm_ratio, na.rm = TRUE),
         RCAge  = as.integer(round(mean(age), -3)),
@@ -171,10 +171,10 @@ server <- function(input, output) {
   
   output$blankPlot <- renderPlot({
     if (input$raw == TRUE) {
-    ggplot(blankdata(), aes(x = type, y = c1412x)) + 
+    ggplot(blankdata(), aes(x = type, y = norm_ratio)) + 
       geom_boxplot() + facet_grid(. ~ system) + 
-      xlab("Blank type") + ylab("Average Raw 14/12 ratio") +
-      ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
+      xlab("Blank type") +
+      ylab("Normalized Fm") +
       ggtitle("Blanks by system") + theme_bw() + 
       theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
@@ -189,11 +189,11 @@ server <- function(input, output) {
   
   output$blanktimePlot <- renderPlot({
     if (input$raw == TRUE) {
-      ggplot(blankdata(), aes(tp_date_pressed, c1412x, color = system)) + 
+      ggplot(blankdata(), aes(tp_date_pressed, norm_ratio, color = system)) + 
         geom_point() +
         facet_grid(type ~ ., scale = "free") +  theme_bw() + 
         ggtitle("Blanks over time") +
-        ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) 
+        ylab("Normalized Fm") 
     } else {
       ggplot(blankdata(), aes(tp_date_pressed, age, color = system)) + 
         geom_point() +
