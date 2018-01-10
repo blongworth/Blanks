@@ -6,6 +6,7 @@ library(RODBC)
 library(dplyr)
 library(ggplot2)
 library(shiny)
+library(DT)
 
 # TODO: sort by size0
 
@@ -126,7 +127,8 @@ ui <- fluidPage(
                   0, 0.1, value = 0.02)
     ),
     mainPanel(plotOutput("blankPlot"),
-              plotOutput("blanktimePlot"),
+              plotOutput("blanktimePlot", click = "timeplot_click"),
+	            tableOutput("pointinfo"),
               tableOutput("blankTable")
     )
     
@@ -165,6 +167,13 @@ server <- function(input, output) {
         RCAge  = as.integer(round(mean(age), -3)),
         RCAge.sd = as.integer(round(sd(age), -2)),
         N = n())
+  }, digits = 4)
+  
+  output$pointinfo <- renderTable({
+    dat <- blankdata() 
+    res <- nearPoints(dat, input$timeplot_click,
+                      threshold = 5, maxpoints = 10)
+    select(res, runtime, tp_num, norm_ratio)
   }, digits = 4)
   
   output$blankPlot <- renderPlot({
