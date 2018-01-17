@@ -18,8 +18,8 @@ db <- conNOSAMS()
 
 #Get raw blank data
 raw =  sqlQuery(db, paste("
-      SELECT runtime, target.tp_date_pressed, target.rec_num, 
-          sample_name, target.tp_num, gf_co2_qty, 
+      SELECT runtime, target.tp_date_pressed, target.rec_num,
+          graphite.osg_num, sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
         FROM snics_raw, target, graphite
       	WHERE target.tp_num = snics_raw.tp_num
@@ -39,7 +39,9 @@ jmer =  sqlQuery(db, paste("
         "))
 
 #add type columns, combine data frames
-jmer$gf_co2_qty <- NA
+jmer <- mutate(jmer,
+               gf_co2_qty = NA,
+               osg_num = NA)
 blanks.r <- rbind(raw, jmer)
 
 #average by target and filter
@@ -58,7 +60,7 @@ blanks.a <- blanks.r %>%
 
 blanks.n =  sqlQuery(db, paste("
       SELECT runtime, wheel, target.tp_date_pressed, sample_name,
-          target.rec_num, target.tp_num, gf_co2_qty, 
+          target.rec_num, target.tp_num, gf_co2_qty, graphite.osg_num,
           norm_ratio, int_err, ext_err, 
           blk_corr_method, fm_corr, sig_fm_corr, ss
         FROM snics_results, target, graphite
@@ -83,7 +85,9 @@ jme =  sqlQuery(db, paste("
 #Close DB
 odbcClose(db)
 
-jme$gf_co2_qty <- NA
+jme <- mutate(jme,
+               gf_co2_qty = NA,
+               osg_num = NA)
 blanks.n <- rbind(blanks.n, jme)
 
 
@@ -173,7 +177,7 @@ server <- function(input, output) {
     dat <- blankdata() 
     res <- nearPoints(dat, input$timeplot_click,
                       threshold = 5, maxpoints = 10)
-    select(res, runtime, tp_num, norm_ratio)
+    select(res, runtime, type, tp_num, osg_num, norm_ratio)
   }, digits = 4)
   
   output$blankPlot <- renderPlot({
