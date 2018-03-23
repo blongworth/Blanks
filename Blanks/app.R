@@ -34,7 +34,7 @@ jmer =  sqlQuery(db, paste("
         FROM snics_raw, target
       	WHERE target.tp_num = snics_raw.tp_num
         AND tp_date_pressed > '", from, "'
-        AND target.rec_num IN (32490, 32491, 32492)
+        AND target.rec_num IN (32490, 32491, 32492, 36947, 148820)
         "))
 
 #add type columns, combine data frames
@@ -75,7 +75,7 @@ jme =  sqlQuery(db, paste("
            blk_corr_method, fm_corr, sig_fm_corr, ss
          FROM snics_results, target
          WHERE target.tp_num = snics_results.tp_num
-         AND target.rec_num IN (32490, 32491, 32492)
+         AND target.rec_num IN (32490, 32491, 32492, 36947, 148820)
          AND tp_date_pressed > '", from, "'
          "))
 
@@ -88,6 +88,7 @@ blanks.n <- rbind(blanks.n, jme)
 
 #combine data
 blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
+  filter(norm_ratio > -99) %>%
   mutate(tp_date_pressed = as.Date(tp_date_pressed),
          type = ordered(recode(as.character(rec_num), 
                                "1081" = "C1", 
@@ -100,8 +101,10 @@ blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
                                "53804" = "C1", 
                                "55101" = "Acet", 
                                "83028" = "C1", 
-                               "140548" = "Acet"),
-                        levels = c("Acet", "C1", "TIRI-F", "JME")),
+                               "140548" = "Acet",
+                               "36947" = "Old Ceylon",
+                               "148820" = "Ceylon"),
+                        levels = c("Acet", "C1", "TIRI-F", "JME", "Old Ceylon", "Ceylon")),
          merr = pmax(int_err, ext_err),
          system = toupper(substring(wheel, 1, 5)),
          age = rcage(norm_ratio))
@@ -120,10 +123,10 @@ ui <- fluidPage(
                      max = Sys.Date()),
       sliderInput("size", "Graphite Size (umol)",
                   1, 500, value = c(40,300)),
-      checkboxInput("filtqc", "Filter by Fm?"),
       checkboxInput("raw", "Plot raw 14/12"),
-      sliderInput("nfm", "Max Fm",
-                  0, 0.1, value = 0.02)
+      checkboxInput("filtqc", "Filter by Age?"),
+      sliderInput("age", "Min age",
+                  0, 60000, value = 40000)
     ),
     mainPanel(plotOutput("blankPlot"),
               plotOutput("blanktimePlot"),
@@ -145,10 +148,9 @@ server <- function(input, output) {
         tp_date_pressed <= input$date[2],
         (is.na(gf_co2_qty) |
         gf_co2_qty >= input$size[1] &
-        gf_co2_qty <= input$size[2]),
-        norm_ratio > -99)
+        gf_co2_qty <= input$size[2]))
     if (input$filtqc) {
-      blanks %>% filter(norm_ratio < input$nfm)
+      blanks %>% filter(age > input$age)
     } else {
       blanks
     }
@@ -158,8 +160,8 @@ server <- function(input, output) {
     blankdata() %>%
       group_by(system, type) %>%
       summarize(
-        Raw1412 = as.integer(mean(c1412x, na.rm = TRUE)),
-        Raw1412.sd = as.integer(sd(c1412x, na.rm = TRUE)),
+        #Raw1412 = as.integer(mean(c1412x, na.rm = TRUE)),
+        #Raw1412.sd = as.integer(sd(c1412x, na.rm = TRUE)),
         Norm1412 = mean(norm_ratio, na.rm = TRUE),
         Norm1412.sd = sd(norm_ratio, na.rm = TRUE),
         RCAge  = as.integer(round(mean(age), -3)),
@@ -169,10 +171,10 @@ server <- function(input, output) {
   
   output$blankPlot <- renderPlot({
     if (input$raw == TRUE) {
-    ggplot(blankdata(), aes(x = type, y = c1412x)) + 
+    ggplot(blankdata(), aes(x = type, y = norm_ratio)) + 
       geom_boxplot() + facet_grid(. ~ system) + 
-      xlab("Blank type") + ylab("Average Raw 14/12 ratio") +
-      ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) +
+      xlab("Blank type") +
+      ylab("Normalized Fm") +
       ggtitle("Blanks by system") + theme_bw() + 
       theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
     } else {
@@ -187,11 +189,11 @@ server <- function(input, output) {
   
   output$blanktimePlot <- renderPlot({
     if (input$raw == TRUE) {
-      ggplot(blankdata(), aes(tp_date_pressed, c1412x, color = system)) + 
+      ggplot(blankdata(), aes(tp_date_pressed, norm_ratio, color = system)) + 
         geom_point() +
         facet_grid(type ~ ., scale = "free") +  theme_bw() + 
         ggtitle("Blanks over time") +
-        ylab(expression(paste("Raw 14/12 ratio ( X", 10^{-16},")"))) 
+        ylab("Normalized Fm") 
     } else {
       ggplot(blankdata(), aes(tp_date_pressed, age, color = system)) + 
         geom_point() +
