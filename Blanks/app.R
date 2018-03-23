@@ -88,6 +88,7 @@ blanks.n <- rbind(blanks.n, jme)
 
 #combine data
 blanks <- left_join(blanks.a, blanks.n, by="tp_num") %>%
+  filter(norm_ratio > -99) %>%
   mutate(tp_date_pressed = as.Date(tp_date_pressed),
          type = ordered(recode(as.character(rec_num), 
                                "1081" = "C1", 
@@ -122,10 +123,10 @@ ui <- fluidPage(
                      max = Sys.Date()),
       sliderInput("size", "Graphite Size (umol)",
                   1, 500, value = c(40,300)),
-      checkboxInput("filtqc", "Filter by Fm?"),
       checkboxInput("raw", "Plot raw 14/12"),
-      sliderInput("nfm", "Max Fm",
-                  0, 0.1, value = 0.02)
+      checkboxInput("filtqc", "Filter by Age?"),
+      sliderInput("age", "Min age",
+                  0, 60000, value = 40000)
     ),
     mainPanel(plotOutput("blankPlot"),
               plotOutput("blanktimePlot"),
@@ -147,10 +148,9 @@ server <- function(input, output) {
         tp_date_pressed <= input$date[2],
         (is.na(gf_co2_qty) |
         gf_co2_qty >= input$size[1] &
-        gf_co2_qty <= input$size[2]),
-        norm_ratio > -99)
+        gf_co2_qty <= input$size[2]))
     if (input$filtqc) {
-      blanks %>% filter(norm_ratio < input$nfm)
+      blanks %>% filter(age > input$age)
     } else {
       blanks
     }
