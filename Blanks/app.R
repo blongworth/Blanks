@@ -2,7 +2,7 @@
 
 ### load libraries
 library(amstools)
-library(RODBC)
+library(odbc)
 library(dplyr)
 library(ggplot2)
 library(shiny)
@@ -16,7 +16,7 @@ from <- '2014-09-01'
 db <- conNOSAMS()
 
 #Get raw blank data
-raw =  sqlQuery(db, paste("
+raw =  dbGetQuery(db, paste("
       SELECT runtime, target.tp_date_pressed, target.rec_num, 
           sample_name, target.tp_num, gf_co2_qty, 
           he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
@@ -27,7 +27,7 @@ raw =  sqlQuery(db, paste("
         AND target.rec_num IN (83028, 53804, 2138, 140548, 36168, 55101, 1081, 39246)
         "))
 
-jmer =  sqlQuery(db, paste("
+jmer =  dbGetQuery(db, paste("
       SELECT runtime, target.tp_date_pressed, target.rec_num, 
           sample_name, target.tp_num, he12c, he13c, d13c, he14_12, 
           he13_12, wheel, ok_calc
@@ -55,7 +55,7 @@ blanks.a <- blanks.r %>%
 #Get normalized blank data
 ###
 
-blanks.n =  sqlQuery(db, paste("
+blanks.n =  dbGetQuery(db, paste("
       SELECT runtime, wheel, target.tp_date_pressed, sample_name,
           target.rec_num, target.tp_num, gf_co2_qty, 
           norm_ratio, int_err, ext_err, 
@@ -68,7 +68,7 @@ blanks.n =  sqlQuery(db, paste("
         "))
 
 
-jme =  sqlQuery(db, paste("
+jme =  dbGetQuery(db, paste("
        SELECT runtime, wheel, target.tp_date_pressed, sample_name, 
            target.rec_num, target.tp_num,
            norm_ratio, int_err, ext_err,
@@ -78,9 +78,6 @@ jme =  sqlQuery(db, paste("
          AND target.rec_num IN (32490, 32491, 32492, 36947, 148820)
          AND tp_date_pressed > '", from, "'
          "))
-
-#Close DB
-odbcClose(db)
 
 jme$gf_co2_qty <- NA
 blanks.n <- rbind(blanks.n, jme)
