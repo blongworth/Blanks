@@ -1,0 +1,18 @@
+Package: blanks
+Title: Get, Process, and Display NOSAMS Blank Data
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Brett",
+           family = "Longworth",
+           role = c("aut", "cre"),
+           email = "blongworth@whoi.edu")
+Description: Get, Process, and Display NOSAMS Blank Data.
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports:
+    amstools,
+    odbc,
+    dplyr
+Suggests: 
+    testthat

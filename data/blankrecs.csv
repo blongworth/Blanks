@@ -1,0 +1,85 @@
+"","rec_num","sample_id","fm_consensus"
+"1",1081,"IAEA C-1 Carbonate Carrara marble",2e-04
+"2",2138,"TIRI F Icelandic Doublespar",0.0018
+"3",39246,"IAEA C-1 CO2 Bulb Carrara marble",2e-04
+"4",39246,"IAEA C-1 CO2 Bulb Carrara marble",2e-04
+"5",60797,"VIRI K Honheim wood",6e-04
+"6",83028,"IAEA C-1 Cararra Marble",2e-04
+"7",200," OX-I/86 archive",0
+"8",39006," 25% C-1, 75% OX-1",0
+"9",39007," 50% C-1, 50% OX-I",0
+"10",39008," 75% C-1, 25% OX-1",0
+"11",39246," C-1 Bulb Standard",2e-04
+"12",39246," C-1 Bulb Standard",2e-04
+"13",41725," Smithsonian Gas",0
+"14",49125," 25% C-1 75% OX-I/05",0
+"15",49126," 50% C-1 50% OX-I/05",0
+"16",49127," 75% C-1 25% OX-I/05",0
+"17",53804,"C-1 Bulb UCI-1652",2e-04
+"18",60626,"Background CO2 tank gas",0
+"19",72444,"CFAMS Tank 1 Mod Instrument gas",0
+"20",72445,"CFAMS Tank 2 Mod Instrument gas",0
+"21",72446,"CFAMS Praxair background CO2",0
+"22",101730,"CFAMS Ref Gas DRP922 ",0
+"23",101731,"CFAMS Ref Gas DRV408",0
+"24",32053,"NOSAMS APM coal bin",0.001
+"25",32169,"NOSAMS low sulfur bituminous coal",0.001
+"26",32490,"JME Alpha Carbon 14734, Lot#D24B28",0.001
+"27",32491,"Alfa Aesar Graphite Stk#14734 Lot#H24F24",0.001
+"28",32492,"Alfa Aesar Graphite Stk#14734 Lot#G31F12",0.001
+"29",34864,"Dextrose Standard",0
+"30",35564,"NIST Sucrose Standard 17e",0
+"31",36168,"FISONS Acetanilide Standard",0.001
+"32",36947,"Ceylon graphite",0.001
+"33",38719,"Mudpatch Sediment",0
+"34",39381,"Buzz Bay Sta. M 9-10cm Sediment",0
+"35",39382,"Bermuda Rise Sed. OCE326",0
+"36",39383,"Sierra Leone Sed. EN66-01",0
+"37",42461,"NBS22 Oil",0
+"38",46908,"Sigma FAME 14D PCGC std",0
+"39",46909,"Sigma FAME 16D PCGC std",0
+"40",46910,"Sigma FAME 18D PCGC std",0
+"41",46911,"Sigma FAME 26D PCGC std",0
+"42",54149,"CSRA std. H4629",0
+"43",54860,"Elemental Analyzer tin blank",0
+"44",55101,"Acetanilide Lot A0206863001",0.0015
+"45",60702,"Chrysene Kodak",0.001
+"46",63051,"EDTA DOC background",0
+"47",63051,"EDTA DOC background",0
+"48",63051,"EDTA-S DOC blank",0
+"49",63051,"EDTA-S DOC blank",0
+"50",63052,"Fulvic Acid DOC std",0
+"51",64052,"Sgma Aldrich PHP DOC std",0
+"52",65614,"M. oct. FAME 28 PCGC std",0
+"53",65615,"M. tri. FAME 30 PCGC std",0
+"54",65616,"M. hentria. FAME 31 PCGC std",0
+"55",72370,"FAME 10 A Lot 78H2513",0
+"56",72371,"FAME 12 A Lot 1375564-53308194",0
+"57",72372,"FAME 14 A Lot A011189101",0
+"58",72373,"FAME 16 A Lot 068K1877",0
+"59",72374,"FAME 17 A Lot 110K5208",0
+"60",72375,"FAME 18 A Lot 117K5300",0
+"61",72376,"FAME 19 A Lot QC#25",0
+"62",72377,"FAME 23 A 79H5166",0
+"63",72378,"FAME 24 A Lot 14165",0
+"64",72379,"FAME 26 A Lot 14320",0
+"65",72380,"FAME 30 A Lot 14255",0
+"66",72381,"Pristane",0
+"67",72382,"Phytane",0
+"68",72898,"FAME 12 B Lot 4453",0
+"69",72899,"FAME 16 B Lot 3163",0
+"70",72900,"FAME 17 B Lot 078K5204",0
+"71",72901,"FAME 18 B Lot 3648",0
+"72",72902,"FAME 20 A Lot 127K1589",0
+"73",72903,"FAME 20 B Lot 3751",0
+"74",72904,"FAME 22 A Lot 068K1203",0
+"75",72905,"FAME 22 B Lot 3187",0
+"76",72906,"FAME 23 B Lot 078K5202",0
+"77",74558,"NOSAMS-Q1 DOC blank",0
+"78",76211,"DOC Blank G2789",0
+"79",85782,"Stigmasterol",0
+"80",103915,"Vanillin SigmaA #MKBG5174V",0
+"81",103916,"Vanillin Acros #B0132891",0
+"82",109310,"Ferulic ACid #STBB8393V",0
+"83",110687,"Vanillin-natural #STBC5364V",0
+"84",114450,"USGS24 graphite",0
