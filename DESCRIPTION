@@ -13,6 +13,7 @@ LazyData: true
 Imports:
     amstools,
     odbc,
-    dplyr
+    dplyr,
+    glue
 Suggests: 
     testthat

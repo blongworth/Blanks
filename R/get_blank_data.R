@@ -16,23 +16,28 @@ library(dplyr)
 #' @export
 #'
 #' @examples
-getRaw <- function(from = '2014-09-01') {
+getRaw <- function(from = '2014-09-01',
+                   recs = c(83028, 53804, 2138, 140548, 36168, 55101,
+                            1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
   
   #Get raw blank data
-  raw <- odbc::dbGetQuery(db, paste("
-    SELECT runtime, target.tp_date_pressed, target.rec_num, 
-      sample_name, target.tp_num, gf_co2_qty, 
-      he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
-    FROM snics_raw
-    JOIN target ON target.tp_num = snics_raw.tp_num
-    LEFT JOIN graphite
-    ON target.osg_num = graphite.osg_num
-    WHERE tp_date_pressed > '", from, "'
-    AND target.rec_num IN (83028, 53804, 2138, 140548, 36168, 55101, 1081, 39246, 32490, 32491, 32492, 36947, 148820)
-    "))
+  
+   query <- glue::glue_sql("SELECT runtime, target.tp_date_pressed, target.rec_num, 
+               sample_name, target.tp_num, gf_co2_qty, 
+               he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
+             FROM snics_raw
+             JOIN target ON target.tp_num = snics_raw.tp_num
+             LEFT JOIN graphite
+             ON target.osg_num = graphite.osg_num
+             WHERE tp_date_pressed > '{from}'
+             AND target.rec_num IN ({recs*})",
+    from = from,
+    recs = recs,
+    .con = db)
+  raw <- odbc::dbGetQuery(db, query)
   
   #average by target and filter
   raw %>%
