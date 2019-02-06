@@ -14,6 +14,9 @@ Imports:
     amstools,
     odbc,
     dplyr,
-    glue
+    glue,
+    magrittr
 Suggests: 
-    testthat
+    testthat,
+    lubridate
+RoxygenNote: 6.1.1

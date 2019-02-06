@@ -15,8 +15,8 @@ library(dplyr)
 #'
 #' @return A data table of raw blank data
 #' @export
+#' @importFrom magrittr "%>%"
 #'
-#' @examples
 getRaw <- function(from = as.Date('2014-09-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 55101,
                             1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
@@ -43,13 +43,13 @@ getRaw <- function(from = as.Date('2014-09-01'),
   
   #average by target and filter
   raw %>%
-    group_by(tp_num) %>%
-    summarize(
+    dplyr::group_by(tp_num) %>%
+    dplyr::summarize(
       he12c = mean(ifelse(ok_calc == 1, he12c, NA), na.rm = TRUE),
       he1412 = mean(ifelse(ok_calc == 1, he14_12, NA), na.rm = TRUE),
       flagged = ( (n() - sum(ok_calc == 1)) / n()) # fraction of runs flagged
     ) %>%
-    mutate(c1412x = he1412 * 1e16) 
+    dplyr::mutate(c1412x = he1412 * 1e16) 
 
 }
 
@@ -61,7 +61,6 @@ getRaw <- function(from = as.Date('2014-09-01'),
 #' @return A data table of normalized blank data
 #' @export
 #'
-#' @examples
 getNorm <- function(from = as.Date('2014-09-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 55101,
                             1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
@@ -85,25 +84,25 @@ getNorm <- function(from = as.Date('2014-09-01'),
               recs = recs,
               .con = db)
 
-  dbGetQuery(db, query)
+  odbc::dbGetQuery(db, query)
 
 }
 
 #' combineBlanks
 #'
-#' @param raw 
-#' @param norm 
+#' @param raw a raw blank datatable from getRaw
+#' @param norm A normalized blank datatable from getNorm
 #'
 #' @return A data table of combined blank data
 #' @export
+#' @importFrom magrittr "%>%"
 #'
-#' @examples
 combineBlanks <- function(raw, norm) {
 
-  blanks <- left_join(raw, norm, by="tp_num") %>%
-    filter(norm_ratio > -99) %>%
-    mutate(tp_date_pressed = as.Date(tp_date_pressed),
-           type = ordered(recode(as.character(rec_num), 
+  dplyr::left_join(raw, norm, by="tp_num") %>%
+    dplyr::filter(norm_ratio > -99) %>%
+    dplyr::mutate(tp_date_pressed = as.Date(tp_date_pressed),
+           type = ordered(dplyr::recode(as.character(rec_num), 
                                  "1081" = "C1", 
                                  "2138" = "TIRI-F", 
                                  "32490" = "JME",
@@ -121,21 +120,19 @@ combineBlanks <- function(raw, norm) {
   				   "Old Ceylon", "Ceylon")),
            merr = pmax(int_err, ext_err),
            system = toupper(substring(wheel, 1, 5)),
-           age = rcage(norm_ratio))
-  blanks
+           age = amstools::rcage(norm_ratio))
 
 }
 
 #' getBlankData
 #'
-#' @param from 
+#' @param from A date object 
 #'
 #' @return A data table of combined blank data
 #' @export
 #'
-#' @examples
 getBlankData <- function(from = '2014-09-01') {
-	raw <- getRaw(from)
-	norm <- getNorm(from)
-	combineBlanks(raw, norm)
+	raw <- blanks::getRaw(from)
+	norm <- blanks::getNorm(from)
+	blanks::combineBlanks(raw, norm)
 }
