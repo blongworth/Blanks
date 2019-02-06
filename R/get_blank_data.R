@@ -11,6 +11,7 @@ library(dplyr)
 #' getRaw
 #'
 #' @param from 
+#' @param recs A vector of rec_nums
 #'
 #' @return A data table of raw blank data
 #' @export
@@ -25,7 +26,8 @@ getRaw <- function(from = as.Date('2014-09-01'),
   
   #Get raw blank data
   
-   query <- glue::glue_sql("SELECT runtime, target.tp_date_pressed, target.rec_num, 
+   query <- glue::glue_sql(
+	    "SELECT runtime, target.tp_date_pressed, target.rec_num, 
                sample_name, target.tp_num, gf_co2_qty, 
                he12c, he13c, d13c, he14_12, he13_12, wheel, ok_calc
              FROM snics_raw
@@ -53,32 +55,37 @@ getRaw <- function(from = as.Date('2014-09-01'),
 
 #' getNorm
 #'
-#' @param from 
+#' @param from A date object 
+#' @param recs A vector of rec_nums
 #'
 #' @return A data table of normalized blank data
 #' @export
 #'
 #' @examples
-getNorm <- function(from = '2014-09-01') {
+getNorm <- function(from = as.Date('2014-09-01'),
+                   recs = c(83028, 53804, 2138, 140548, 36168, 55101,
+                            1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
   
-  blanks.n =  dbGetQuery(db, paste("
-        SELECT runtime, wheel, target.tp_date_pressed, sample_name,
-            target.rec_num, target.tp_num, gf_co2_qty, 
-            norm_ratio, int_err, ext_err, 
-            blk_corr_method, fm_corr, sig_fm_corr, ss
-          FROM snics_results
-          JOIN target
-          ON snics_results.tp_num = target.tp_num
-          LEFT JOIN graphite
-          ON target.osg_num = graphite.osg_num
-          WHERE tp_date_pressed > '", from, "'
-          AND target.rec_num IN (83028, 53804, 2138, 140548, 36168, 55101, 1081, 39246, 32490, 32491, 32492, 36947, 148820)
-          "))
-  
-  blanks.n
+  query <- glue::glue_sql(
+	     "SELECT runtime, wheel, target.tp_date_pressed, sample_name,
+                target.rec_num, target.tp_num, gf_co2_qty, 
+                norm_ratio, int_err, ext_err, 
+                blk_corr_method, fm_corr, sig_fm_corr, ss
+              FROM snics_results
+              JOIN target
+              ON snics_results.tp_num = target.tp_num
+              LEFT JOIN graphite
+              ON target.osg_num = graphite.osg_num
+                 WHERE tp_date_pressed > '{from}'
+                 AND target.rec_num IN ({recs*})",
+              from = from,
+              recs = recs,
+              .con = db)
+
+  dbGetQuery(db, query)
 
 }
 
