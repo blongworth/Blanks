@@ -1,4 +1,4 @@
 library(testthat)
-library(Blanks)
+library(blanks)
 
-test_check("Blanks")
+test_check("blanks")

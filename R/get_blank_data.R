@@ -16,7 +16,7 @@ library(dplyr)
 #' @export
 #'
 #' @examples
-getRaw <- function(from = '2014-09-01',
+getRaw <- function(from = as.Date('2014-09-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 55101,
                             1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
 

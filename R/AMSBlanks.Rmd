@@ -20,7 +20,7 @@ library(knitr)
 
 #ggthemr("fresh")
 
-from <- '2014-09-01'
+from <- as.Date('2014-09-01')
 
 blanks <- getBlankData(from)
 
@@ -73,10 +73,10 @@ ggplot(blanks, aes(tp_date_pressed, c1412x, color = system)) +
   geom_point() + theme_bw() + 
   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 
-ggplot(blanks, aes(tp_date_pressed, he1312, color = system)) +
-  scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") + 
-  geom_point() + theme_bw() + 
-  theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
+# ggplot(blanks, aes(tp_date_pressed, he1312, color = system)) +
+#   scale_y_log10() + geom_smooth() + facet_grid(type ~ ., scale = "free") + 
+#   geom_point() + theme_bw() + 
+#   theme(panel.grid.minor=element_blank(), panel.grid.major=element_blank())
 
 ggplot(blanks, aes(tp_date_pressed, norm_ratio, color = system)) +
   geom_smooth() + facet_grid(type ~ ., scale = "free") +  theme_bw() + 
