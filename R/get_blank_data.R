@@ -34,7 +34,7 @@ getRaw <- function(from = as.Date('2014-09-01'),
              JOIN target ON target.tp_num = snics_raw.tp_num
              LEFT JOIN graphite
              ON target.osg_num = graphite.osg_num
-             WHERE tp_date_pressed > '{from}'
+             WHERE tp_date_pressed > {from}
              AND target.rec_num IN ({recs*})",
     from = from,
     recs = recs,
@@ -47,7 +47,7 @@ getRaw <- function(from = as.Date('2014-09-01'),
     dplyr::summarize(
       he12c = mean(ifelse(ok_calc == 1, he12c, NA), na.rm = TRUE),
       he1412 = mean(ifelse(ok_calc == 1, he14_12, NA), na.rm = TRUE),
-      flagged = ( (n() - sum(ok_calc == 1)) / n()) # fraction of runs flagged
+      flagged = ( (length(ok_calc) - sum(ok_calc == 1)) / length(ok_calc)) # fraction of runs flagged
     ) %>%
     dplyr::mutate(c1412x = he1412 * 1e16) 
 
@@ -78,7 +78,7 @@ getNorm <- function(from = as.Date('2014-09-01'),
               ON snics_results.tp_num = target.tp_num
               LEFT JOIN graphite
               ON target.osg_num = graphite.osg_num
-                 WHERE tp_date_pressed > '{from}'
+                 WHERE tp_date_pressed > {from}
                  AND target.rec_num IN ({recs*})",
               from = from,
               recs = recs,

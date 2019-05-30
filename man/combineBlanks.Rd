@@ -7,9 +7,9 @@
 combineBlanks(raw, norm)
 }
 \arguments{
-\item{raw}{}
+\item{raw}{a raw blank datatable from getRaw}
 
-\item{norm}{}
+\item{norm}{A normalized blank datatable from getNorm}
 }
 \value{
 A data table of combined blank data
