@@ -93,13 +93,13 @@ server <- function(input, output) {
     if (input$raw == TRUE) {
       ggplot(blankdata(), aes(tp_date_pressed, norm_ratio, color = system)) + 
         geom_point() +
-        facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        facet_grid(process ~ ., scale = "free") +  theme_bw() + 
         ggtitle("Blanks over time") +
         ylab("Normalized Fm") 
     } else {
       ggplot(blankdata(), aes(tp_date_pressed, age, color = system)) + 
         geom_point() +
-        facet_grid(type ~ ., scale = "free") +  theme_bw() + 
+        facet_grid(process ~ ., scale = "free") +  theme_bw() + 
         ggtitle("Blanks over time") +
         ylab("Radiocarbon age") 
     }

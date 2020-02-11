@@ -11,6 +11,7 @@ License: What license it uses
 Encoding: UTF-8
 LazyData: true
 Imports:
+    purrr,
     amstools,
     odbc,
     dplyr,
@@ -19,4 +20,4 @@ Imports:
 Suggests: 
     testthat,
     lubridate
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2

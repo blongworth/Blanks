@@ -1,13 +1,6 @@
 # functions for pulling blank data from the DB
 
 
-### load libraries
-library(amstools)
-library(odbc)
-library(dplyr)
-
-
-
 #' getRaw
 #'
 #' @param from A date object 
@@ -132,11 +125,12 @@ getNormBlankWheels <- function(wheels,
 #' @importFrom magrittr "%>%"
 #'
 combineBlanks <- function(raw, norm) {
-
+  con <- amstools::conNOSAMS()
   dplyr::left_join(raw, norm, by="tp_num") %>%
     dplyr::filter(norm_ratio > -99) %>%
     dplyr::mutate(tp_date_pressed = as.Date(tp_date_pressed),
-           type = ordered(dplyr::recode(as.character(rec_num), 
+                  process = purrr::map_chr(tp_num, amstools::getProcess, con),
+                  type = ordered(dplyr::recode(as.character(rec_num), 
                                  "1081" = "C1", 
                                  "2138" = "TIRI-F", 
                                  "32490" = "JME",
