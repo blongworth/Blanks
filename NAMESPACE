@@ -3,5 +3,6 @@
 export(combineBlanks)
 export(getBlankData)
 export(getNorm)
+export(getNormBlankWheels)
 export(getRaw)
 importFrom(magrittr,"%>%")

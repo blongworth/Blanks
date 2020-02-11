@@ -5,10 +5,11 @@
 \title{getRaw}
 \usage{
 getRaw(from = as.Date("2014-09-01"), recs = c(83028, 53804, 2138,
-  140548, 36168, 55101, 1081, 39246, 32490, 32491, 32492, 36947, 148820))
+  140548, 36168, 55101, 1081, 39246, 32490, 32491, 32492, 36947, 148820,
+  159579))
 }
 \arguments{
-\item{from}{}
+\item{from}{A date object}
 
 \item{recs}{A vector of rec_nums}
 }

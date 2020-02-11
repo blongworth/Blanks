@@ -10,7 +10,7 @@ library(dplyr)
 
 #' getRaw
 #'
-#' @param from 
+#' @param from A date object 
 #' @param recs A vector of rec_nums
 #'
 #' @return A data table of raw blank data
@@ -19,7 +19,7 @@ library(dplyr)
 #'
 getRaw <- function(from = as.Date('2014-09-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 55101,
-                            1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
+                            1081, 39246, 32490, 32491, 32492, 36947, 148820, 159579)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
@@ -63,7 +63,7 @@ getRaw <- function(from = as.Date('2014-09-01'),
 #'
 getNorm <- function(from = as.Date('2014-09-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 55101,
-                            1081, 39246, 32490, 32491, 32492, 36947, 148820)) {
+                            1081, 39246, 32490, 32491, 32492, 36947, 148820, 159579)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
@@ -88,6 +88,40 @@ getNorm <- function(from = as.Date('2014-09-01'),
 
 }
 
+#' getNormBlankWheels
+#'
+#' @param wheels A vector of wheels 
+#' @param recs A vector of rec_nums
+#'
+#' @return A data table of normalized blank data
+#' @export
+#'
+getNormBlankWheels <- function(wheels,
+                   recs = c(83028, 53804, 2138, 140548, 36168, 55101,
+                            1081, 39246, 32490, 32491, 32492, 36947, 148820, 159579)) {
+
+  #Open DB connection
+  db <- amstools::conNOSAMS()
+  
+  query <- glue::glue_sql(
+	     "SELECT runtime, wheel, target.tp_date_pressed, sample_name,
+                target.rec_num, target.tp_num, gf_co2_qty, 
+                norm_ratio, int_err, ext_err, 
+                blk_corr_method, fm_corr, sig_fm_corr, ss
+              FROM snics_results
+              JOIN target
+              ON snics_results.tp_num = target.tp_num
+              LEFT JOIN graphite
+              ON target.osg_num = graphite.osg_num
+                 WHERE wheel IN({wheels*})
+                 AND target.rec_num IN ({recs*})",
+              wheels = wheels,
+              recs = recs,
+              .con = db)
+
+  odbc::dbGetQuery(db, query)
+
+}
 #' combineBlanks
 #'
 #' @param raw a raw blank datatable from getRaw
@@ -115,9 +149,11 @@ combineBlanks <- function(raw, norm) {
                                  "83028" = "C1", 
                                  "140548" = "Acet",
                                  "36947" = "Old Ceylon",
-                                 "148820" = "Ceylon"),
-                          levels = c("Acet", "C1", "TIRI-F", "JME", 
-  				   "Old Ceylon", "Ceylon")),
+                                 "148820" = "Ceylon",
+                                 "159579" = "Groundwater"),
+                          levels = c("Acet", "C1", "TIRI-F", 
+                                     "Groundwater", "JME", 
+  				                           "Old Ceylon", "Ceylon")),
            merr = pmax(int_err, ext_err),
            system = toupper(substring(wheel, 1, 5)),
            age = amstools::rcage(norm_ratio))
