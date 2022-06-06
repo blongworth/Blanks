@@ -1,0 +1,33 @@
+---
+title: "Ceylon over time"
+format: html
+editor: visual
+---
+
+## Data
+
+```{r}
+library(blanks)
+library(tidyverse)
+
+df <- getNorm('2010-01-01') |> 
+  mutate(runtime = as.Date(runtime))
+
+df_c <- df |> 
+  filter(str_starts(wheel, "CFAMS"),
+         rec_num ==148820,
+         norm_ratio > 0,
+         norm_ratio < 0.0025)
+```
+
+## Plot
+
+```{r}
+ggplot(df_c, aes(runtime, norm_ratio)) + 
+  geom_point(size = 1) +
+  geom_smooth(method = "lm", se = FALSE, color = "lightblue") +
+  geom_smooth(method = "loess", span = 0.1, se = FALSE, color = "darkgrey") +
+  ggtitle("Ceylon norm ratio over time",
+          subtitle = "measurements < Fm 0.0025") +
+  theme_classic()
+```
