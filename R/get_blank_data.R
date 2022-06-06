@@ -153,7 +153,7 @@ combineBlanks <- function(raw, norm) {
   				                           "Old Ceylon", "Ceylon")),
            merr = pmax(int_err, ext_err),
            system = toupper(substring(wheel, 1, 5)),
-           age = amstools::rcage(norm_ratio))
+           age = amsdata::rcage(norm_ratio))
 
 }
 

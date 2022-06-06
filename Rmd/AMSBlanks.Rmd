@@ -11,6 +11,7 @@ Summary of AMS blanks (JME and C1) for both machines from Sep 2014 to present. R
 
 ```{r warning=FALSE, message=FALSE}
 library(amstools)
+library(amsdata)
 library(blanks)
 library(odbc)
 library(dplyr)
