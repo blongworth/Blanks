@@ -10,10 +10,10 @@
 #' @export
 #' @importFrom magrittr "%>%"
 #'
-getRaw <- function(from = as.Date('2014-09-01'),
+getRaw <- function(from = as.Date('2021-01-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 
                             55101, 1081, 39246, 32490, 32491, 
-                            32492, 36947, 148820, 159579)) {
+                            32492, 36947, 64052, 148820, 159579, 178222)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
@@ -55,10 +55,10 @@ getRaw <- function(from = as.Date('2014-09-01'),
 #' @return A data table of normalized blank data
 #' @export
 #'
-getNorm <- function(from = as.Date('2014-09-01'),
+getNorm <- function(from = as.Date('2021-01-01'),
                    recs = c(83028, 53804, 2138, 140548, 36168, 
-                            55101, 1081, 39246, 32490, 32491,
-                            32492, 36947, 148820, 159579)) {
+                            55101, 1081, 39246, 32490, 32491, 
+                            32492, 36947, 64052, 148820, 159579, 178222)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
@@ -93,8 +93,8 @@ getNorm <- function(from = as.Date('2014-09-01'),
 #'
 getNormBlankWheels <- function(wheels,
                    recs = c(83028, 53804, 2138, 140548, 36168, 
-                            55101, 1081, 39246, 32490, 32491,
-                            32492, 36947, 148820, 159579)) {
+                            55101, 1081, 39246, 32490, 32491, 
+                            32492, 36947, 64052, 148820, 159579, 178222)) {
 
   #Open DB connection
   db <- amstools::conNOSAMS()
@@ -143,14 +143,17 @@ combineBlanks <- function(raw, norm) {
                                  "39246" = "C1", 
                                  "53804" = "C1", 
                                  "55101" = "Acet", 
+                                 "64052" = "KHP", 
                                  "83028" = "C1", 
                                  "140548" = "Acet",
                                  "36947" = "Old Ceylon",
                                  "148820" = "Ceylon",
+                                 "178222" = "2022 Groundwater",
                                  "159579" = "Groundwater"),
-                          levels = c("Acet", "C1", "TIRI-F", 
-                                     "Groundwater", "JME", 
-  				                           "Old Ceylon", "Ceylon")),
+                          levels = c("Acet", "KHP", 
+                                     "C1", "TIRI-F", 
+                                     "Groundwater", "2022 Groundwater", 
+                                     "JME", "Old Ceylon", "Ceylon")),
            merr = pmax(int_err, ext_err),
            system = toupper(substring(wheel, 1, 5)),
            age = amsdata::rcage(norm_ratio))
@@ -164,7 +167,7 @@ combineBlanks <- function(raw, norm) {
 #' @return A data table of combined blank data
 #' @export
 #'
-getBlankData <- function(from = '2014-09-01') {
+getBlankData <- function(from = '2021-01-01') {
 	raw <- blanks::getRaw(from)
 	norm <- blanks::getNorm(from)
 	blanks::combineBlanks(raw, norm)

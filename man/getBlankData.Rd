@@ -4,7 +4,7 @@
 \alias{getBlankData}
 \title{getBlankData}
 \usage{
-getBlankData(from = "2014-09-01")
+getBlankData(from = "2021-01-01")
 }
 \arguments{
 \item{from}{A date object}
